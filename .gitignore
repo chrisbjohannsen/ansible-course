@@ -1,0 +1,6 @@
+*.swp
+logs/
+**/.terraform/
+**/terraform.d/
+Course_Introduction_to_Ansible/
+
