@@ -51,8 +51,8 @@ resource "aws_main_route_table_association" "set-default-rt-assoc" {
 }
 
 resource "aws_security_group" "allow-ssh" {
-  name   = "allow ssh"
-  vpc_id = aws_vpc.ansible_course.id
+  provider = aws.west
+  vpc_id   = aws_vpc.ansible_course.id
 
   ingress = [{
     from_port        = 22
