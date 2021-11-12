@@ -1,3 +1,9 @@
+
+provider "aws" {
+  region  = "us-west-2"
+  alias   = "west"
+}
+
 resource "aws_vpc" "ansible_course" {
   provider             = aws.west
   cidr_block           = "10.0.0.0/16"
@@ -5,20 +11,29 @@ resource "aws_vpc" "ansible_course" {
   enable_dns_support   = true
 
   tags = {
-    Name = "ansible_vpc"
+    Name      = "ansible_vpc"
+    Terraform = true
   }
 }
 
 resource "aws_internet_gateway" "igw_ansible" {
   provider = aws.west
   vpc_id   = aws_vpc.ansible_course.id
+
+  tags = {
+    Terraform = true
+  }
 }
 
-resource "aws_subnet" "sn_west-1" {
+resource "aws_subnet" "sn_west_1" {
   provider          = aws.west
   availability_zone = "us-west-2a"
   cidr_block        = "10.0.1.0/24"
   vpc_id            = aws_vpc.ansible_course.id
+
+  tags = {
+    Terraform = true
+  }
 }
 
 resource "aws_route_table" "internet_route" {
@@ -42,6 +57,9 @@ resource "aws_route_table" "internet_route" {
     }
   ]
 
+  tags = {
+    Terraform = true
+  }
 }
 
 resource "aws_main_route_table_association" "set-default-rt-assoc" {
@@ -50,7 +68,7 @@ resource "aws_main_route_table_association" "set-default-rt-assoc" {
   route_table_id = aws_route_table.internet_route.id
 }
 
-resource "aws_security_group" "allow-ssh" {
+resource "aws_security_group" "allow_ssh" {
   provider = aws.west
   vpc_id   = aws_vpc.ansible_course.id
 
@@ -79,7 +97,51 @@ resource "aws_security_group" "allow-ssh" {
   }]
 
   tags = {
-    Name = "ssh-ingress-sg"
+    Name      = "ssh-ingress-sg"
+    Terraform = true
   }
 }
 
+resource "aws_eip" "web_ip" {
+  # instance = aws_instance.web_server_1.id
+  vpc = true
+  tags = {
+    Terraform = true
+  }
+}
+
+resource "aws_eip_association" "web_ip_assoc" {
+  instance_id   = aws_instance.webserver_1.id
+  allocation_id = aws_eip.web_ip.id
+}
+
+data "aws_ami" "ubuntu" {
+  provider    = aws.west
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"]
+}
+
+resource "aws_instance" "webserver_1" {
+  provider      = aws.west
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.sn_west_1.id
+  vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+  key_name = "ansible-course"
+
+  tags = {
+    Terraform = true
+    Name      = "webserver-1"
+  }
+}
