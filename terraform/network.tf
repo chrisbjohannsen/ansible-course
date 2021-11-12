@@ -1,7 +1,7 @@
 
 provider "aws" {
-  region  = "us-west-2"
-  alias   = "west"
+  region = "us-west-2"
+  alias  = "west"
 }
 
 resource "aws_vpc" "ansible_course" {
@@ -133,15 +133,49 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "webserver_1" {
-  provider      = aws.west
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.sn_west_1.id
+  provider               = aws.west
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.sn_west_1.id
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
-  key_name = "ansible-course"
+  key_name               = "ansible-course"
 
   tags = {
     Terraform = true
     Name      = "webserver-1"
+  }
+}
+
+resource "aws_instance" "webserver_2" {
+  provider               = aws.west
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.sn_west_1.id
+  vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+  key_name               = "ansible-course"
+
+  tags = {
+    Terraform = true
+    Name      = "webserver-2"
+  }
+}
+
+resource "aws_elb" "web_lb" {
+  name               = "web-traffic-lb"
+  # availability_zones = ["us-west-2a", "us-west-2b"]
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  instances = [aws_instance.webserver_1.id, aws_instance.webserver_2.id]
+  subnets   = [aws_subnet.sn_west_1.id]
+
+  tags = {
+    Terraform = true
+    Name      = "webr-elb-1"
   }
 }
