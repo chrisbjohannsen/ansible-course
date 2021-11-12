@@ -1,11 +1,9 @@
 
 provider "aws" {
   region = "us-west-2"
-  #alias  = "west"
 }
 
 resource "aws_vpc" "ansible_course" {
-  # provider             = aws.west
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -17,7 +15,6 @@ resource "aws_vpc" "ansible_course" {
 }
 
 resource "aws_internet_gateway" "igw_ansible" {
-  #provider = aws.west
   vpc_id   = aws_vpc.ansible_course.id
 
   tags = {
@@ -26,7 +23,6 @@ resource "aws_internet_gateway" "igw_ansible" {
 }
 
 resource "aws_subnet" "sn_west_1" {
-  #provider          = aws.west
   availability_zone = "us-west-2a"
   cidr_block        = "10.0.1.0/24"
   vpc_id            = aws_vpc.ansible_course.id
@@ -37,7 +33,6 @@ resource "aws_subnet" "sn_west_1" {
 }
 
 resource "aws_route_table" "internet_route" {
-  #provider = aws.west
   vpc_id   = aws_vpc.ansible_course.id
   route = [
     {
@@ -63,13 +58,11 @@ resource "aws_route_table" "internet_route" {
 }
 
 resource "aws_main_route_table_association" "set-default-rt-assoc" {
-  #provider       = aws.west
   vpc_id         = aws_vpc.ansible_course.id
   route_table_id = aws_route_table.internet_route.id
 }
 
 resource "aws_security_group" "allow_ssh" {
-  #provider = aws.west
   vpc_id   = aws_vpc.ansible_course.id
 
   ingress = [{
@@ -138,7 +131,6 @@ resource "aws_eip_association" "web_ip_assoc_2" {
 }
 
 data "aws_ami" "ubuntu" {
-  #provider    = aws.west
   most_recent = true
 
   filter {
@@ -155,7 +147,6 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "webserver_1" {
-  #provider               = aws.west
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.sn_west_1.id
@@ -169,7 +160,6 @@ resource "aws_instance" "webserver_1" {
 }
 
 resource "aws_instance" "webserver_2" {
-  #provider               = aws.west
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.sn_west_1.id
@@ -184,7 +174,6 @@ resource "aws_instance" "webserver_2" {
 
 resource "aws_elb" "web_lb" {
   name = "web-traffic-lb"
-  # availability_zones = ["us-west-2a", "us-west-2b"]
 
   listener {
     instance_port     = 80
