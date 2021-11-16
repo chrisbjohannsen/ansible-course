@@ -1,0 +1,17 @@
+# install-nginx.yaml
+#
+---
+  - hosts: webservers
+    become: true
+    tasks:
+      - name: Install Nginx on web server hosts
+        apt:
+          name: nginx
+          state: latest
+          update-cache: yes
+      - name: Ensure Nginx starts
+        service: 
+          name: nginx
+          state: started
+          enabled: yes
+        

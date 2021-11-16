@@ -190,3 +190,23 @@ resource "aws_elb" "web_lb" {
     Name      = "webr-elb-1"
   }
 }
+
+resource "aws_ebs_volume" "backup_drive" {
+  type = "gp3"
+  size = "10"
+  
+  availability_zone = "us-west-2a"
+
+  tags = {
+    Terraform = true
+    Name = "backup"
+  }
+}
+
+resource "aws_volume_attachment" "webserver_1_backup" {
+  device_name = "/dev/xvdc"
+  volume_id = aws_ebs_volume.backup_drive.id
+  instance_id = aws_instance.webserver_1.id
+}
+
+

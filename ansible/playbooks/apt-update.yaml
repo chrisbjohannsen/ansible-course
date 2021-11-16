@@ -1,0 +1,9 @@
+# apt-update.yaml
+#
+---
+  - hosts: webservers
+    become: true
+    tasks:
+      - name: Update the apt-get packages
+        apt: 
+          update-cache: yes
